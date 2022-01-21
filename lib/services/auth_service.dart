@@ -1,29 +1,37 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_chat/models/login_response.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../global/environment.dart';
+import '../models/usuario.dart';
 
 class AuthService with ChangeNotifier{
 
-    // Usuario  usuario; ??
+     late Usuario usuario;
 
-    Future login( String email, String password) async {
+     bool _autenticando = false;
+
+     final _storage = new FlutterSecureStorage();
+
+     bool get autenticando => _autenticando;
+     set autenticando( bool valor){
+       _autenticando = valor;
+       notifyListeners();
+     }
+
+    Future<bool> login( String email, String password) async {
+
+      this.autenticando = true;
+
 
        final data = {
          'email': email,
          'password': password
        };
 
-     print('llamando al login');
-
-
      final uri = Uri.parse('${ Environment.apiUrl }/login');
-
-     print(uri);
-
-    
 
        final resp = await http.post( uri,
         body: jsonEncode(data),
@@ -31,18 +39,30 @@ class AuthService with ChangeNotifier{
           'Content-Type': 'application/json'
         }
       );
-       print('el body');
-       print(resp.body);
-       
-     
 
-       
+      print(resp.body);
+      this.autenticando = false;
 
-     
+      if(resp.statusCode == 200){
+       final loginResponse = loginResponseFromJson(resp.body);
+       usuario = loginResponse.usuario;
 
+       // TODO: Guardar token en lugar seguro
 
+       return true;
+      }
+      else{
+        return false;
+      }
+
+      
     
-
     }
+
+
+
+  Future _guardarToken(String token) async{
+     return await _storage.write(key: 'token', value: token);
+  }
 
 }
