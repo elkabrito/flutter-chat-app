@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_chat/widgets/boton_azul.dart';
 
 import 'package:flutter_chat/widgets/custom_input.dart';
+import 'package:provider/provider.dart';
+import '../helpers/mostrar_alerta.dart';
+import '../services/auth_service.dart';
 import '../widgets/labels_widget.dart';
 import '../widgets/logo_widget.dart';
 
@@ -54,6 +57,9 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+
+    final authService = Provider.of<AuthService> (context);
+
     return Container(
       margin: EdgeInsets.only(top: 40),
       padding: EdgeInsets.symmetric(horizontal: 50),
@@ -78,7 +84,21 @@ class __FormState extends State<_Form> {
              textController: passCtrl,
            ),
            
-          BotonAzul(text: 'Registrar', onPressed: () {  
+          BotonAzul(text: 'Crear cuenta', onPressed: authService.autenticando ? null : ()  async {  
+
+            FocusScope.of(context).unfocus();
+         
+            final registerOk = await authService.register(nameCtrl.text.trim(), mailCtrl.text.trim(), passCtrl.text.trim());
+
+            if(registerOk == true){
+              // TODO: conectar a nuestro socket server
+              Navigator.pushReplacementNamed(context, 'usuarios');
+
+            }else{
+              // Mostrar alerta
+              mostrarAlerta(context, 'Registro incrorrecto', registerOk);
+            }
+            
            
           },)      
           
